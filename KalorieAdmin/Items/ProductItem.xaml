@@ -1,0 +1,51 @@
+﻿<UserControl x:Class="KalorieAdmin.Items.ProductItem"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="120" d:DesignWidth="800">
+    <Border BorderBrush="#2ecc71" BorderThickness="1" Margin="5" CornerRadius="5">
+        <Grid Background="#eafaf1" Margin="0,0,0,-35">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Margin="15">
+                <TextBlock Foreground="Black" Text="Название:" FontWeight="Bold"/>
+                <TextBox x:Name="ProductName" Height="25" IsEnabled="False" Text="{Binding Name}" 
+                         Background="#d5f5e3" Foreground="Black" BorderThickness="0" Margin="0,5,0,0"/>
+
+                <TextBlock Foreground="Black" Text="Калории:" FontWeight="Bold" Margin="0,10,0,0"/>
+                <TextBox x:Name="ProductCalories" Height="25" IsEnabled="False" Text="{Binding Calories, StringFormat={}{0:F2}}"
+                         Background="#d5f5e3" Foreground="Black" BorderThickness="0" Margin="0,5,0,0"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Margin="15">
+                <TextBlock Foreground="Black" Text="Белки:" FontWeight="Bold"/>
+                <TextBox x:Name="ProductProteins" Height="25" IsEnabled="False" 
+                         Text="{Binding Proteins, StringFormat={}{0:F2}}"
+                         Background="#d5f5e3" Foreground="Black" BorderThickness="0" Margin="0,5,0,0"/>
+
+                <TextBlock Foreground="Black" Text="Жиры:" FontWeight="Bold" Margin="0,10,0,0"/>
+                <TextBox x:Name="ProductFats" Height="25" IsEnabled="False" Text="{Binding Fats, StringFormat={}{0:F2}}"
+                         Background="#d5f5e3" Foreground="Black" BorderThickness="0" Margin="0,5,0,0"/>
+
+                <TextBlock Foreground="Black" Text="Углеводы:" FontWeight="Bold" Margin="0,10,0,0"/>
+                <TextBox x:Name="ProductCarbs" Height="25" IsEnabled="False" Text="{Binding Carbs, StringFormat={}{0:F2}}"
+                         Background="#d5f5e3" Foreground="Black" BorderThickness="0" Margin="0,5,0,0"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Orientation="Vertical" Margin="15" VerticalAlignment="Center">
+                <Button Content="Изменить" Width="80" Height="30" Margin="0,5" 
+                        Background="#2ecc71" Foreground="White" BorderThickness="0"
+                        FontWeight="Bold" Click="EditProduct"/>
+                <Button Content="Удалить" Width="80" Height="30" Margin="0,5" 
+                        Background="#e74c3c" Foreground="White" BorderThickness="0"
+                        FontWeight="Bold" Click="DeleteProduct"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

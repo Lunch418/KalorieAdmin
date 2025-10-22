@@ -1,0 +1,61 @@
+﻿<Page x:Class="KalorieAdmin.Pages.Products.Add"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      mc:Ignorable="d" 
+      d:DesignHeight="550" d:DesignWidth="600"
+      Title="Add Product">
+
+    <Grid Background="#eafaf1">
+        <!-- Header -->
+        <Border Background="#2ecc71" Height="60" VerticalAlignment="Top">
+            <TextBlock x:Name="PageTitle" Text="Добавить продукт" Foreground="White" FontSize="20" FontWeight="Bold"
+                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Form -->
+        <Border Background="#27ae60" Margin="50,80,50,50" CornerRadius="10">
+            <StackPanel Margin="30,30,30,20">
+                <TextBlock Text="Название:" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
+                <TextBox x:Name="ProductName" Height="35" Margin="0,0,0,15" Background="#ecf0f1" 
+                         Foreground="Black" BorderThickness="0" Padding="10" FontSize="14"/>
+
+                <TextBlock Text="Калории:" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
+                <TextBox x:Name="Calories" Height="35" Margin="0,0,0,15" Background="#ecf0f1" 
+                         Foreground="Black" BorderThickness="0" Padding="10" FontSize="14"/>
+
+                <Grid Margin="0,0,0,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="0,0,5,0">
+                        <TextBlock Text="Белки:" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="Proteins" Height="35" Background="#ecf0f1" Foreground="Black" 
+                                 BorderThickness="0" Padding="10" FontSize="14"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                        <TextBlock Text="Жиры:" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="Fats" Height="35" Background="#ecf0f1" Foreground="Black" 
+                                 BorderThickness="0" Padding="10" FontSize="14"/>
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Text="Углеводы:" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
+                <TextBox x:Name="Carbs" Height="35" Margin="0,0,0,30" Background="#ecf0f1" 
+                         Foreground="Black" BorderThickness="0" Padding="10" FontSize="14"/>
+
+                <!-- Buttons -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button x:Name="btnSave" Content="Сохранить" Background="#2ecc71" 
+                            Foreground="White" Height="40" Width="120" BorderThickness="0" 
+                            FontWeight="Bold" FontSize="14" Click="SaveProduct" Margin="0,0,20,0"/>
+                    <Button Content="Отмена" Background="#e74c3c" 
+                            Foreground="White" Height="40" Width="120" BorderThickness="0" 
+                            FontWeight="Bold" FontSize="14" Click="Cancel_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>
