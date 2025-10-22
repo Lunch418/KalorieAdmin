@@ -3,85 +3,70 @@ using KalorieAdmin.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace KalorieAdmin.Classes
 {
-    public class GoalsContext : Goal
+    namespace KalorieAdmin.Classes
     {
-        public GoalsContext(int Id, int UserId, string TargetType, decimal? TargetValue, DateTime? StartDate, DateTime? EndDate, bool IsCompleted)
-            : base(Id, UserId, TargetType, TargetValue, StartDate, EndDate, IsCompleted) { }
-
-        public static List<GoalsContext> Select()
+        public class GoalsContext
         {
-            List<GoalsContext> allGoals = new List<GoalsContext>();
-            string SQL = @"SELECT g.*, u.username as user_name 
-                          FROM goals g 
-                          LEFT JOIN users u ON g.user_id = u.id;";
-            MySqlConnection connection = Connection.OpenConnection();
-            MySqlDataReader Data = Connection.Query(SQL, connection);
-            while (Data.Read())
-            {
-                var goal = new GoalsContext(
-                    Data.GetInt32("id"),
-                    Data.GetInt32("user_id"),
-                    Data.GetString("target_type"),
-                    Data.IsDBNull(Data.GetOrdinal("target_value")) ? null : (decimal?)Data.GetDecimal("target_value"),
-                    Data.IsDBNull(Data.GetOrdinal("start_date")) ? null : (DateTime?)Data.GetDateTime("start_date"),
-                    Data.IsDBNull(Data.GetOrdinal("end_date")) ? null : (DateTime?)Data.GetDateTime("end_date"),
-                    Data.GetBoolean("is_completed")
-                );
-                goal.UserName = Data.GetString("user_name");
-                allGoals.Add(goal);
-            }
-            Connection.CloseConnection(connection);
-            return allGoals;
-        }
+            public int Id { get; set; }
+            public int UserId { get; set; }
+            public string TargetType { get; set; }
+            public decimal? TargetValue { get; set; }
+            public DateTime? StartDate { get; set; }
+            public DateTime? EndDate { get; set; }
+            public bool IsCompleted { get; set; }
 
-        public void Add()
-        {
-            string SQL = "INSERT INTO goals (user_id, target_type, target_value, start_date, end_date, is_completed) VALUES (@UserId, @TargetType, @TargetValue, @StartDate, @EndDate, @IsCompleted)";
+            // Приватный клиент для HTTP запросов
+            private static readonly HttpClient client = new HttpClient();
+            private static readonly string apiUrl = "http://localhost:5000/api/";
 
-            using (MySqlConnection connection = Connection.OpenConnection())
+            // Получить все цели
+            public static async Task<List<GoalsContext>> GetAllGoalsAsync()
             {
-                using (MySqlCommand cmd = new MySqlCommand(SQL, connection))
+                List<GoalsContext> goals = new List<GoalsContext>();
+                var response = await client.GetStringAsync(apiUrl + "goals");
+
+                if (!string.IsNullOrEmpty(response))
                 {
-                    cmd.Parameters.AddWithValue("@UserId", this.UserId);
-                    cmd.Parameters.AddWithValue("@TargetType", this.TargetType);
-                    cmd.Parameters.AddWithValue("@TargetValue", this.TargetValue ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@StartDate", this.StartDate ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@EndDate", this.EndDate ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@IsCompleted", this.IsCompleted);
-                    cmd.ExecuteNonQuery();
+                    goals = JsonConvert.DeserializeObject<List<GoalsContext>>(response);
                 }
+                return goals;
             }
-        }
 
-        public void Update()
-        {
-            string SQL = "UPDATE goals SET user_id = @UserId, target_type = @TargetType, target_value = @TargetValue, start_date = @StartDate, end_date = @EndDate, is_completed = @IsCompleted WHERE id = @Id";
-
-            using (MySqlConnection connection = Connection.OpenConnection())
+            // Сохранить цель
+            public async Task SaveGoalAsync()
             {
-                using (MySqlCommand cmd = new MySqlCommand(SQL, connection))
-                {
-                    cmd.Parameters.AddWithValue("@UserId", this.UserId);
-                    cmd.Parameters.AddWithValue("@TargetType", this.TargetType);
-                    cmd.Parameters.AddWithValue("@TargetValue", this.TargetValue ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@StartDate", this.StartDate ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@EndDate", this.EndDate ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@IsCompleted", this.IsCompleted);
-                    cmd.Parameters.AddWithValue("@Id", this.Id);
-                    cmd.ExecuteNonQuery();
-                }
-            }
-        }
+                var content = new StringContent(
+                    JsonConvert.SerializeObject(this),
+                    System.Text.Encoding.UTF8,
+                    "application/json");
 
-        public void Delete()
-        {
-            string SQL = $"DELETE FROM goals WHERE id = {this.Id}";
-            MySqlConnection connection = Connection.OpenConnection();
-            Connection.Query(SQL, connection);
-            Connection.CloseConnection(connection);
+                var response = await client.PostAsync(apiUrl + "goals", content);
+                response.EnsureSuccessStatusCode();
+            }
+
+            // Обновить цель
+            public async Task UpdateGoalAsync()
+            {
+                var content = new StringContent(
+                    JsonConvert.SerializeObject(this),
+                    System.Text.Encoding.UTF8,
+                    "application/json");
+
+                var response = await client.PutAsync(apiUrl + "goals/" + this.Id, content);
+                response.EnsureSuccessStatusCode();
+            }
+
+            // Удалить цель
+            public async Task DeleteGoalAsync()
+            {
+                var response = await client.DeleteAsync(apiUrl + "goals/" + this.Id);
+                response.EnsureSuccessStatusCode();
+            }
         }
     }
-}

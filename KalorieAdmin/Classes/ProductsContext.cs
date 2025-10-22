@@ -3,78 +3,62 @@ using KalorieAdmin.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace KalorieAdmin.Classes
 {
-    public class ProductsContext : Product
+    public class ProductsContext
     {
-        public ProductsContext(int Id, string Name, decimal Calories, decimal? Proteins, decimal? Fats, decimal? Carbs)
-            : base(Id, Name, Calories, Proteins, Fats, Carbs) { }
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public decimal Calories { get; set; }
+        public decimal? Proteins { get; set; }
+        public decimal? Fats { get; set; }
+        public decimal? Carbs { get; set; }
 
-        public static List<ProductsContext> Select()
+        private static readonly HttpClient client = new HttpClient();
+        private static readonly string apiUrl = "http://localhost:5000/api/";
+
+        public static async Task<List<ProductsContext>> GetAllProductsAsync()
         {
-            List<ProductsContext> allProducts = new List<ProductsContext>();
-            string SQL = "SELECT * FROM products;";
-            MySqlConnection connection = Connection.OpenConnection();
-            MySqlDataReader Data = Connection.Query(SQL, connection);
-            while (Data.Read())
+            List<ProductsContext> products = new List<ProductsContext>();
+            var response = await client.GetStringAsync(apiUrl + "products");
+
+            if (!string.IsNullOrEmpty(response))
             {
-                allProducts.Add(new ProductsContext(
-                    Data.GetInt32("id"),
-                    Data.GetString("name"),
-                    Data.GetDecimal("calories"),
-                    Data.IsDBNull(Data.GetOrdinal("proteins")) ? null : (decimal?)Data.GetDecimal("proteins"),
-                    Data.IsDBNull(Data.GetOrdinal("fats")) ? null : (decimal?)Data.GetDecimal("fats"),
-                    Data.IsDBNull(Data.GetOrdinal("carbs")) ? null : (decimal?)Data.GetDecimal("carbs")
-                ));
+                products = JsonConvert.DeserializeObject<List<ProductsContext>>(response);
             }
-            Connection.CloseConnection(connection);
-            return allProducts;
+            return products;
         }
 
-        public void Add()
+        public async Task SaveProductAsync()
         {
-            string SQL = "INSERT INTO products (name, calories, proteins, fats, carbs) VALUES (@Name, @Calories, @Proteins, @Fats, @Carbs)";
+            var content = new StringContent(
+                JsonConvert.SerializeObject(this),
+                System.Text.Encoding.UTF8,
+                "application/json");
 
-            using (MySqlConnection connection = Connection.OpenConnection())
-            {
-                using (MySqlCommand cmd = new MySqlCommand(SQL, connection))
-                {
-                    cmd.Parameters.AddWithValue("@Name", this.Name);
-                    cmd.Parameters.AddWithValue("@Calories", this.Calories);
-                    cmd.Parameters.AddWithValue("@Proteins", this.Proteins ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Fats", this.Fats ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Carbs", this.Carbs ?? (object)DBNull.Value);
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            var response = await client.PostAsync(apiUrl + "products", content);
+            response.EnsureSuccessStatusCode();
         }
 
-        public void Update()
+        public async Task UpdateProductAsync()
         {
-            string SQL = "UPDATE products SET name = @Name, calories = @Calories, proteins = @Proteins, fats = @Fats, carbs = @Carbs WHERE id = @Id";
+            var content = new StringContent(
+                JsonConvert.SerializeObject(this),
+                System.Text.Encoding.UTF8,
+                "application/json");
 
-            using (MySqlConnection connection = Connection.OpenConnection())
-            {
-                using (MySqlCommand cmd = new MySqlCommand(SQL, connection))
-                {
-                    cmd.Parameters.AddWithValue("@Name", this.Name);
-                    cmd.Parameters.AddWithValue("@Calories", this.Calories);
-                    cmd.Parameters.AddWithValue("@Proteins", this.Proteins ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Fats", this.Fats ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Carbs", this.Carbs ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Id", this.Id);
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            var response = await client.PutAsync(apiUrl + "products/" + this.Id, content);
+            response.EnsureSuccessStatusCode();
         }
 
-        public void Delete()
+        public async Task DeleteProductAsync()
         {
-            string SQL = $"DELETE FROM products WHERE id = {this.Id}";
-            MySqlConnection connection = Connection.OpenConnection();
-            Connection.Query(SQL, connection);
-            Connection.CloseConnection(connection);
+            var response = await client.DeleteAsync(apiUrl + "products/" + this.Id);
+            response.EnsureSuccessStatusCode();
         }
     }
 }

@@ -3,75 +3,62 @@ using KalorieAdmin.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace KalorieAdmin.Classes
 {
-    public class UsersContext : User
+    public class UsersContext
     {
-        public UsersContext(int Id, string Username, string Email, string PasswordHash, int DailyCalorieGoal, DateTime CreatedAt)
-            : base(Id, Username, Email, PasswordHash, DailyCalorieGoal, CreatedAt) { }
+        public int Id { get; set; }
+        public string Username { get; set; }
+        public string Email { get; set; }
+        public string PasswordHash { get; set; }
+        public int DailyCalorieGoal { get; set; }
+        public DateTime CreatedAt { get; set; }
 
-        public static List<UsersContext> Select()
+        private static readonly HttpClient client = new HttpClient();
+        private static readonly string apiUrl = "http://localhost:5000/api/";
+
+        public static async Task<List<UsersContext>> GetAllUsersAsync()
         {
-            List<UsersContext> allUsers = new List<UsersContext>();
-            string SQL = "SELECT * FROM users;";
-            MySqlConnection connection = Connection.OpenConnection();
-            MySqlDataReader Data = Connection.Query(SQL, connection);
-            while (Data.Read())
+            List<UsersContext> users = new List<UsersContext>();
+            var response = await client.GetStringAsync(apiUrl + "users");
+
+            if (!string.IsNullOrEmpty(response))
             {
-                allUsers.Add(new UsersContext(
-                    Data.GetInt32("id"),
-                    Data.GetString("username"),
-                    Data.GetString("email"),
-                    Data.GetString("password_hash"),
-                    Data.GetInt32("daily_calorie_goal"),
-                    Data.GetDateTime("created_at")
-                ));
+                users = JsonConvert.DeserializeObject<List<UsersContext>>(response);
             }
-            Connection.CloseConnection(connection);
-            return allUsers;
+            return users;
         }
 
-        public void Add()
+        public async Task SaveUserAsync()
         {
-            string SQL = "INSERT INTO users (username, email, password_hash, daily_calorie_goal) VALUES (@Username, @Email, @PasswordHash, @DailyCalorieGoal)";
+            var content = new StringContent(
+                JsonConvert.SerializeObject(this),
+                System.Text.Encoding.UTF8,
+                "application/json");
 
-            using (MySqlConnection connection = Connection.OpenConnection())
-            {
-                using (MySqlCommand cmd = new MySqlCommand(SQL, connection))
-                {
-                    cmd.Parameters.AddWithValue("@Username", this.Username);
-                    cmd.Parameters.AddWithValue("@Email", this.Email);
-                    cmd.Parameters.AddWithValue("@PasswordHash", this.PasswordHash);
-                    cmd.Parameters.AddWithValue("@DailyCalorieGoal", this.DailyCalorieGoal);
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            var response = await client.PostAsync(apiUrl + "users", content);
+            response.EnsureSuccessStatusCode();
         }
 
-        public void Update()
+        public async Task UpdateUserAsync()
         {
-            string SQL = "UPDATE users SET username = @Username, email = @Email, daily_calorie_goal = @DailyCalorieGoal WHERE id = @Id";
+            var content = new StringContent(
+                JsonConvert.SerializeObject(this),
+                System.Text.Encoding.UTF8,
+                "application/json");
 
-            using (MySqlConnection connection = Connection.OpenConnection())
-            {
-                using (MySqlCommand cmd = new MySqlCommand(SQL, connection))
-                {
-                    cmd.Parameters.AddWithValue("@Username", this.Username);
-                    cmd.Parameters.AddWithValue("@Email", this.Email);
-                    cmd.Parameters.AddWithValue("@DailyCalorieGoal", this.DailyCalorieGoal);
-                    cmd.Parameters.AddWithValue("@Id", this.Id);
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            var response = await client.PutAsync(apiUrl + "users/" + this.Id, content);
+            response.EnsureSuccessStatusCode();
         }
 
-        public void Delete()
+        public async Task DeleteUserAsync()
         {
-            string SQL = $"DELETE FROM users WHERE id = {this.Id}";
-            MySqlConnection connection = Connection.OpenConnection();
-            Connection.Query(SQL, connection);
-            Connection.CloseConnection(connection);
+            var response = await client.DeleteAsync(apiUrl + "users/" + this.Id);
+            response.EnsureSuccessStatusCode();
         }
     }
 }

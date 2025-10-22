@@ -3,77 +3,61 @@ using KalorieAdmin.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace KalorieAdmin.Classes
 {
-    public class AchievementsContext : Achievement
+    public class AchievementsContext
     {
-        public AchievementsContext(int Id, int UserId, string Name, string Description, DateTime EarnedAt)
-            : base(Id, UserId, Name, Description, EarnedAt) { }
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public DateTime EarnedAt { get; set; }
 
-        public static List<AchievementsContext> Select()
+        private static readonly HttpClient client = new HttpClient();
+        private static readonly string apiUrl = "http://localhost:5000/api/";
+
+        public static async Task<List<AchievementsContext>> GetAllAchievementsAsync()
         {
-            List<AchievementsContext> allAchievements = new List<AchievementsContext>();
-            string SQL = @"SELECT a.*, u.username as user_name 
-                          FROM achievements a 
-                          LEFT JOIN users u ON a.user_id = u.id;";
-            MySqlConnection connection = Connection.OpenConnection();
-            MySqlDataReader Data = Connection.Query(SQL, connection);
-            while (Data.Read())
+            List<AchievementsContext> achievements = new List<AchievementsContext>();
+            var response = await client.GetStringAsync(apiUrl + "achievements");
+
+            if (!string.IsNullOrEmpty(response))
             {
-                var achievement = new AchievementsContext(
-                    Data.GetInt32("id"),
-                    Data.GetInt32("user_id"),
-                    Data.GetString("name"),
-                    Data.IsDBNull(Data.GetOrdinal("description")) ? "" : Data.GetString("description"),
-                    Data.GetDateTime("earned_at")
-                );
-                achievement.UserName = Data.GetString("user_name");
-                allAchievements.Add(achievement);
+                achievements = JsonConvert.DeserializeObject<List<AchievementsContext>>(response);
             }
-            Connection.CloseConnection(connection);
-            return allAchievements;
+            return achievements;
         }
 
-        public void Add()
+        public async Task SaveAchievementAsync()
         {
-            string SQL = "INSERT INTO achievements (user_id, name, description) VALUES (@UserId, @Name, @Description)";
+            var content = new StringContent(
+                JsonConvert.SerializeObject(this),
+                System.Text.Encoding.UTF8,
+                "application/json");
 
-            using (MySqlConnection connection = Connection.OpenConnection())
-            {
-                using (MySqlCommand cmd = new MySqlCommand(SQL, connection))
-                {
-                    cmd.Parameters.AddWithValue("@UserId", this.UserId);
-                    cmd.Parameters.AddWithValue("@Name", this.Name);
-                    cmd.Parameters.AddWithValue("@Description", this.Description ?? (object)DBNull.Value);
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            var response = await client.PostAsync(apiUrl + "achievements", content);
+            response.EnsureSuccessStatusCode();
         }
 
-        public void Update()
+        public async Task UpdateAchievementAsync()
         {
-            string SQL = "UPDATE achievements SET user_id = @UserId, name = @Name, description = @Description WHERE id = @Id";
+            var content = new StringContent(
+                JsonConvert.SerializeObject(this),
+                System.Text.Encoding.UTF8,
+                "application/json");
 
-            using (MySqlConnection connection = Connection.OpenConnection())
-            {
-                using (MySqlCommand cmd = new MySqlCommand(SQL, connection))
-                {
-                    cmd.Parameters.AddWithValue("@UserId", this.UserId);
-                    cmd.Parameters.AddWithValue("@Name", this.Name);
-                    cmd.Parameters.AddWithValue("@Description", this.Description ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Id", this.Id);
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            var response = await client.PutAsync(apiUrl + "achievements/" + this.Id, content);
+            response.EnsureSuccessStatusCode();
         }
 
-        public void Delete()
+        public async Task DeleteAchievementAsync()
         {
-            string SQL = $"DELETE FROM achievements WHERE id = {this.Id}";
-            MySqlConnection connection = Connection.OpenConnection();
-            Connection.Query(SQL, connection);
-            Connection.CloseConnection(connection);
+            var response = await client.DeleteAsync(apiUrl + "achievements/" + this.Id);
+            response.EnsureSuccessStatusCode();
         }
     }
 }

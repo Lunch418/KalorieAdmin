@@ -1,0 +1,52 @@
+﻿<Page x:Class="KalorieAdmin.Pages.Achievements_Add"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:KalorieAdmin.Pages"
+      mc:Ignorable="d" 
+      d:DesignHeight="500" d:DesignWidth="600"
+      Title="Add Achievement">
+
+    <Grid Background="#eafaf1">
+        <!-- Header -->
+        <Border Background="#2ecc71" Height="60" VerticalAlignment="Top">
+            <TextBlock x:Name="PageTitle" Text="Добавить достижение" Foreground="White" FontSize="20" FontWeight="Bold"
+                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Form -->
+        <Border Background="#27ae60" Margin="50,80,50,43" CornerRadius="10">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="30">
+                    <TextBlock Text="ID пользователя:" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBox x:Name="UserId" Height="35" Margin="0,0,0,15" Background="#ecf0f1" 
+                             Foreground="Black" BorderThickness="0" Padding="10" FontSize="14"/>
+
+                    <TextBlock Text="Название достижения:" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBox x:Name="Name" Height="35" Margin="0,0,0,15" Background="#ecf0f1" 
+                             Foreground="Black" BorderThickness="0" Padding="10" FontSize="14"/>
+
+                    <TextBlock Text="Описание:" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBox x:Name="Description" Height="70" Margin="0,0,0,15" Background="#ecf0f1" 
+                             Foreground="Black" BorderThickness="0" Padding="10" FontSize="14"
+                             TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
+
+                    <TextBlock Text="Дата получения:" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <DatePicker x:Name="EarnedAt" Height="35" Margin="0,0,0,30" Background="#ecf0f1" 
+                               Foreground="Black" BorderThickness="0" Padding="5" FontSize="14"/>
+
+                    <!-- Buttons -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button x:Name="btnSave" Content="Сохранить" Background="#2ecc71" 
+                                Foreground="White" Height="40" Width="120" BorderThickness="0" 
+                                FontWeight="Bold" FontSize="14" Click="SaveAchievement" Margin="0,0,20,0"/>
+                        <Button Content="Отмена" Background="#e74c3c" 
+                                Foreground="White" Height="40" Width="120" BorderThickness="0" 
+                                FontWeight="Bold" FontSize="14" Click="Cancel_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</Page>

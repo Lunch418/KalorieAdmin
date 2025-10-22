@@ -3,79 +3,61 @@ using KalorieAdmin.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace KalorieAdmin.Classes
 {
-    public class MealsContext : Meal
+    public class MealsContext
     {
-        public MealsContext(int Id, int UserId, int ProductId, decimal WeightGrams, DateTime ConsumedAt)
-            : base(Id, UserId, ProductId, WeightGrams, ConsumedAt) { }
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public int ProductId { get; set; }
+        public decimal WeightGrams { get; set; }
+        public DateTime ConsumedAt { get; set; }
 
-        public static List<MealsContext> Select()
+        private static readonly HttpClient client = new HttpClient();
+        private static readonly string apiUrl = "http://localhost:5000/api/";
+
+        public static async Task<List<MealsContext>> GetAllMealsAsync()
         {
-            List<MealsContext> allMeals = new List<MealsContext>();
-            string SQL = @"SELECT m.*, u.username as user_name, p.name as product_name 
-                          FROM meals m 
-                          LEFT JOIN users u ON m.user_id = u.id 
-                          LEFT JOIN products p ON m.product_id = p.id;";
-            MySqlConnection connection = Connection.OpenConnection();
-            MySqlDataReader Data = Connection.Query(SQL, connection);
-            while (Data.Read())
+            List<MealsContext> meals = new List<MealsContext>();
+            var response = await client.GetStringAsync(apiUrl + "meals");
+
+            if (!string.IsNullOrEmpty(response))
             {
-                var meal = new MealsContext(
-                    Data.GetInt32("id"),
-                    Data.GetInt32("user_id"),
-                    Data.GetInt32("product_id"),
-                    Data.GetDecimal("weight_grams"),
-                    Data.GetDateTime("consumed_at")
-                );
-                meal.UserName = Data.GetString("user_name");
-                meal.ProductName = Data.GetString("product_name");
-                allMeals.Add(meal);
+                meals = JsonConvert.DeserializeObject<List<MealsContext>>(response);
             }
-            Connection.CloseConnection(connection);
-            return allMeals;
+            return meals;
         }
 
-        public void Add()
+        public async Task SaveMealAsync()
         {
-            string SQL = "INSERT INTO meals (user_id, product_id, weight_grams) VALUES (@UserId, @ProductId, @WeightGrams)";
+            var content = new StringContent(
+                JsonConvert.SerializeObject(this),
+                System.Text.Encoding.UTF8,
+                "application/json");
 
-            using (MySqlConnection connection = Connection.OpenConnection())
-            {
-                using (MySqlCommand cmd = new MySqlCommand(SQL, connection))
-                {
-                    cmd.Parameters.AddWithValue("@UserId", this.UserId);
-                    cmd.Parameters.AddWithValue("@ProductId", this.ProductId);
-                    cmd.Parameters.AddWithValue("@WeightGrams", this.WeightGrams);
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            var response = await client.PostAsync(apiUrl + "meals", content);
+            response.EnsureSuccessStatusCode();
         }
 
-        public void Update()
+        public async Task UpdateMealAsync()
         {
-            string SQL = "UPDATE meals SET user_id = @UserId, product_id = @ProductId, weight_grams = @WeightGrams WHERE id = @Id";
+            var content = new StringContent(
+                JsonConvert.SerializeObject(this),
+                System.Text.Encoding.UTF8,
+                "application/json");
 
-            using (MySqlConnection connection = Connection.OpenConnection())
-            {
-                using (MySqlCommand cmd = new MySqlCommand(SQL, connection))
-                {
-                    cmd.Parameters.AddWithValue("@UserId", this.UserId);
-                    cmd.Parameters.AddWithValue("@ProductId", this.ProductId);
-                    cmd.Parameters.AddWithValue("@WeightGrams", this.WeightGrams);
-                    cmd.Parameters.AddWithValue("@Id", this.Id);
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            var response = await client.PutAsync(apiUrl + "meals/" + this.Id, content);
+            response.EnsureSuccessStatusCode();
         }
 
-        public void Delete()
+        public async Task DeleteMealAsync()
         {
-            string SQL = $"DELETE FROM meals WHERE id = {this.Id}";
-            MySqlConnection connection = Connection.OpenConnection();
-            Connection.Query(SQL, connection);
-            Connection.CloseConnection(connection);
+            var response = await client.DeleteAsync(apiUrl + "meals/" + this.Id);
+            response.EnsureSuccessStatusCode();
         }
     }
 }
